@@ -128,6 +128,7 @@ from omegaconf import OmegaConf
 
 from env.global_configs import *
 from src.eval_client.eval_env import create_eval_env
+from src.eval_client.unstable_outcomes import record_unstable_layouts
 from utils.cluttered_generator import UnStableError
 from utils.load_file import load_yaml
 from utils.pipeline_utils import *
@@ -350,8 +351,10 @@ def main():
         if enable_monitor:
             get_monitor().reset()
         bad_envs = None
+        reset_complete = False
         try:
             env.reset(seed=env.env_seeds)
+            reset_complete = True
             env.run_eval()
             env.seed_manager.eval_step()
 
@@ -369,6 +372,8 @@ def main():
             bad_envs = sorted(e.broken_envs)
 
         except UnStableError:
+            if not reset_complete:
+                record_unstable_layouts(env.save_dir, env.env_seeds, phase="reset")
             env.seed_manager.eval_step()
         except Exception as e:
             import traceback

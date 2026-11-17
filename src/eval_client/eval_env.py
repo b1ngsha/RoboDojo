@@ -14,6 +14,7 @@ from env.global_configs import *
 from env.global_configs import BENCHMARK
 from env.observation_manager.obs_manager import ObsManager
 from env.seed_manager.seed_manager import SeedManager
+from src.eval_client.unstable_outcomes import record_unstable_layouts
 from utils.cluttered_generator import UnStableError
 from utils.pipeline_utils import get_robot_action_dim_info
 from utils.save_file import VideoStreamWriter, format_video_saved_message, save_json
@@ -787,6 +788,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             # eval total, accounting them under unstable_nums instead.
             unstable_in_batch = [e for e in exist_envs if e in self.unstable_envs]
             if unstable_in_batch:
+                record_unstable_layouts(
+                    self.save_dir,
+                    (self.env_seeds[e] for e in unstable_in_batch),
+                    phase="evaluation",
+                )
                 self.unstable_nums += len(unstable_in_batch)
                 self.episode_nums -= len(unstable_in_batch)
             eval_envs = [e for e in exist_envs if e not in self.unstable_envs]
